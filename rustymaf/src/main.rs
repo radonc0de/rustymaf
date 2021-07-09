@@ -5,29 +5,33 @@ t   afc     afl     iac mafv    clol
 */
 use std::fs;
 
-fn build_maftable() {
+fn build_maftable() -> Vec<Vec<f32>> {
     let input = fs::read_to_string("maftable")
         .expect("Failed to read input.");
     let maftable = input.lines().collect::<Vec<&str>>();
     let mut cheatsheet = Vec::new();
     let mut index = 0;
-    for i in maftable {
+    for i in &maftable {
         cheatsheet.push(Vec::new());
         cheatsheet[index].push(i.parse::<f32>().unwrap());
         if index == 0 {
-            cheatsheet[index].push(0);
-        } else {
-            cheatsheet[index].push(cheatsheet[index-1][2]);
+            cheatsheet[index].push(0.0);
+        } else{ 
+            let prev = cheatsheet[index-1][2]; 
+            cheatsheet[index].push(prev);
         }                        
         if index == (maftable.len() - 1 as usize) {
-            cheatsheet[index].push(1000);
+            cheatsheet[index].push(1000.0);
         }else{
-            cheatsheet[index].push(cheatsheet[index][0] +  ((cheatsheet[index + 1][0] - cheatsheet[index]) / 2));
+            let next = maftable[index].parse::<f32>().unwrap()  +  ((maftable[index+1].parse::<f32>().unwrap() - maftable[index].parse::<f32>().unwrap())/2.0);
+            cheatsheet[index].push(next);
         } 
         
-        println!("{:?}", cheatsheet[index]):
+        println!("{:?}", cheatsheet[index]);
         index += 1;
         }
+
+    cheatsheet
 }
 
 fn main() {
@@ -54,9 +58,7 @@ fn main() {
 
     println!("Reformatted data.");
 
-    data = smoothendata(data);
-
-    build_maftable();
+    scale_maf(build_maftable(), smoothendata(data));
 }
 
 fn smoothendata(mut data: Vec<Vec<f32>>) -> Vec<Vec<f32>>{
@@ -68,6 +70,7 @@ fn smoothendata(mut data: Vec<Vec<f32>>) -> Vec<Vec<f32>>{
     let j = (length - 1) as u32;
 
     for k in (1..j).rev() {
+        println!("--");
         let i = k as usize;
         let mafv1 = data[i][4];
         let mafv0 = data[i-1][4];
@@ -80,17 +83,36 @@ fn smoothendata(mut data: Vec<Vec<f32>>) -> Vec<Vec<f32>>{
             data.remove(i);
 
         }
+        let corr = data[i][1] + data[i][2];
+        data[i].push(corr);
+        println!("{:?}", data[i]);
     }
     
     length = data.len();
     println!("Smoothened to {} lines of data.", length);
 
-    for i in data {
-        i.push(i[1]+i[2]);
-    }
-
     data
 }
+
+fn scale_maf(maftable: Vec<Vec<f32>>, data : Vec<Vec<f32>>) -> Vec<Vec<f32>> {
+    let mut final_maftable = Vec::new();
+    for mut i in maftable {
+        let mut sum = 0.0;
+        let mut nums = 0.0;
+        let lower = i[1];
+        let upper = i[2];
+        for j in &data {
+            if j[6] >= lower && j[6] <= upper {
+                sum += j[6];
+                nums += 1.0;
+            }
+        }
+        let average = sum / nums;
+        i.push(average);
+        
+        final_maftable.push(i);
+    }
+    final_maftable}
 
 
 /*
