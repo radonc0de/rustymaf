@@ -3,8 +3,32 @@
 32, -4.69,  1.56,   32, 1.22,   8       
 t   afc     afl     iac mafv    clol       
 */
-
 use std::fs;
+
+fn build_maftable() {
+    let input = fs::read_to_string("maftable")
+        .expect("Failed to read input.");
+    let maftable = input.lines().collect::<Vec<&str>>();
+    let mut cheatsheet = Vec::new();
+    let mut index = 0;
+    for i in maftable {
+        cheatsheet.push(Vec::new());
+        cheatsheet[index].push(i.parse::<f32>().unwrap());
+        if index == 0 {
+            cheatsheet[index].push(0);
+        } else {
+            cheatsheet[index].push(cheatsheet[index-1][2]);
+        }                        
+        if index == (maftable.len() - 1 as usize) {
+            cheatsheet[index].push(1000);
+        }else{
+            cheatsheet[index].push(cheatsheet[index][0] +  ((cheatsheet[index + 1][0] - cheatsheet[index]) / 2));
+        } 
+        
+        println!("{:?}", cheatsheet[index]):
+        index += 1;
+        }
+}
 
 fn main() {
     
@@ -30,10 +54,12 @@ fn main() {
 
     println!("Reformatted data.");
 
-    smoothendata(data);
+    data = smoothendata(data);
+
+    build_maftable();
 }
 
-fn smoothendata(mut data: Vec<Vec<f32>>) {
+fn smoothendata(mut data: Vec<Vec<f32>>) -> Vec<Vec<f32>>{
     let threshold = 0.2;
 
     let mut length = data.len();
@@ -59,11 +85,16 @@ fn smoothendata(mut data: Vec<Vec<f32>>) {
     length = data.len();
     println!("Smoothened to {} lines of data.", length);
 
+    for i in data {
+        i.push(i[1]+i[2]);
+    }
+
+    data
 }
 
 
 /*
-0   1       2       3   4       5
+0   1       2       3   4       5       6
 32, -4.69,  1.56,   32, 1.22,   8       
-t   afc     afl     iac mafv    clol       
+t   afc     afl     iac mafv    clol    cor%  
 */
